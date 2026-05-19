@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- m4b assembly no longer fails with `FileNotFoundError` on ffmpeg builds that
+  lack `libfdk_aac` (Homebrew's default, and many distro packages).
+  `concat_wavs_with_ffmpeg()` now uses the built-in `aac` encoder by default,
+  overridable via the `AUDIBLEZ_AAC_ENCODER` env var. Both ffmpeg invocations
+  in the m4b path now check the subprocess return code and raise a clear
+  `RuntimeError` on failure instead of silently leaving a missing temp file
+  that surfaced as a confusing downstream `FileNotFoundError`.
+
 ### Added — Apple Silicon (Metal / MPS) GPU support
 
 Audiblez now runs the Kokoro TTS model on Apple's Metal GPU on M-series Macs.
@@ -98,9 +108,6 @@ On MPS it defaults to fp32 and the README discourages switching.
 
 **Other pre-existing issues uncovered but not fixed in this change:**
 
-- `core.create_m4b()` invokes `ffmpeg -c:a libfdk_aac`, which is not in
-  Homebrew's default ffmpeg build. The WAV files generate correctly but
-  the final m4b assembly fails with `FileNotFoundError`. Unrelated to MPS.
 - `cli.py` and `ui.py` had `from core import main` (no package prefix),
   which only resolved when run from inside the `audiblez/` directory.
   Fixed to `from audiblez.core import ...` as part of this change.
